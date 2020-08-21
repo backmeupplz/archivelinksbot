@@ -4,13 +4,14 @@ dotenv.config({ path: `${__dirname}/../.env` })
 import { bot } from './helpers/bot'
 import { checkTime } from './middlewares/checkTime'
 import { sendHelp } from './commands/help'
-import { handleText } from './helpers/handleText'
+import { handleLinks } from './helpers/handleLinks'
 
 // Check time
 bot.use(checkTime)
 // Setup commands
 bot.command(['help', 'start'], sendHelp)
-bot.on('text', handleText)
+// Setup handler
+bot.use(handleLinks)
 // Start bot
 bot.launch()
 
