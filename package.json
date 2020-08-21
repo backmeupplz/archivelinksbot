@@ -1,9 +1,9 @@
 {
-  "name": "webarchivebot",
+  "name": "archivelinksbot",
   "version": "1.0.0",
   "description": "Telegram bot that saves all links to webarchive",
   "main": "dist/app.js",
-  "repository": "https://github.com/backmeupplz/webarchivebot",
+  "repository": "https://github.com/backmeupplz/archivelinksbot",
   "author": "backmeupplz <backmeupplz@gmail.com>",
   "license": "MIT",
   "private": false,

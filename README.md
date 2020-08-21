@@ -1,10 +1,10 @@
-# webarchivebot
+# [@archivelinksbot](https://t.me/archivelinksbot)
 
 This bot saves all links that it gets to the web archive.
 
 # Installation and local launch
 
-1. Clone this repo: `git clone https://github.com/backmeupplz/webarchivebot`
+1. Clone this repo: `git clone https://github.com/backmeupplz/archivelinksbot`
 2. Create `.env` with the environment variables listed below
 3. Run `yarn install` in the root folder
 4. Run `yarn develop`
