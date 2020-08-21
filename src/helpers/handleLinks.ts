@@ -15,20 +15,18 @@ export async function handleLinks(ctx: Context) {
           entity.length
         )
       try {
-        await ctx.reply(await tryArchivingUrlWebArchive(url), {
+        await ctx.reply(await tryArchivingUrlArchiveIs(url), {
           reply_to_message_id: ctx.message.message_id,
           disable_web_page_preview: true,
         })
       } catch (err) {
-        if (err.message.includes('500')) {
-          try {
-            await ctx.reply(await tryArchivingUrlArchiveIs(url), {
-              reply_to_message_id: ctx.message.message_id,
-              disable_web_page_preview: true,
-            })
-          } catch (err) {
-            console.log(url, err.message)
-          }
+        try {
+          await ctx.reply(await tryArchivingUrlWebArchive(url), {
+            reply_to_message_id: ctx.message.message_id,
+            disable_web_page_preview: true,
+          })
+        } catch (err) {
+          console.log(url, err.message)
         }
         console.log(url, err.message)
       }
