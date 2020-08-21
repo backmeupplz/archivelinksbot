@@ -1,8 +1,7 @@
-// Dependencies
-import { Telegraf, Context } from "telegraf";
+import { Context } from 'telegraf'
 
-export function setupHelp(bot: Telegraf<Context>) {
-  bot.command(['help', 'start'], ctx => {
-    ctx.replyWithHTML(ctx.i18n.t('help'))
-  })
+export function sendHelp(ctx: Context) {
+  return ctx.replyWithHTML(
+    `Just send any link to this bot and it will save it to the web archive.`
+  )
 }
