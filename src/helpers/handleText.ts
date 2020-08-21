@@ -1,5 +1,6 @@
 import { Context } from 'telegraf'
 import axios from 'axios'
+const archive = require('archive.is')
 
 export async function handleText(ctx: Context) {
   for (const entity of ctx.message?.entities || []) {
@@ -8,14 +9,14 @@ export async function handleText(ctx: Context) {
       const url =
         entity.url || ctx.message.text.substr(entity.offset, entity.length)
       try {
-        await ctx.reply(await tryArchivingUrl(url), {
+        await ctx.reply(await tryArchivingUrlWebArchive(url), {
           reply_to_message_id: ctx.message.message_id,
           disable_web_page_preview: true,
         })
       } catch (err) {
         if (err.message.includes('500')) {
           try {
-            await ctx.reply(await tryArchivingUrl(url), {
+            await ctx.reply(await tryArchivingUrlArchiveIs(url), {
               reply_to_message_id: ctx.message.message_id,
               disable_web_page_preview: true,
             })
@@ -29,11 +30,16 @@ export async function handleText(ctx: Context) {
   }
 }
 
-async function tryArchivingUrl(url: string) {
+async function tryArchivingUrlWebArchive(url: string) {
   const response = (
     await axios.post('https://pragma.archivelab.org', {
       url,
     })
   ).data
   return `https://web.archive.org${response.wayback_id}`
+}
+
+async function tryArchivingUrlArchiveIs(url: string) {
+  const response = await archive.save(url)
+  return response.shortUrl
 }
