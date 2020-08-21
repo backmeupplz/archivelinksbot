@@ -15,6 +15,7 @@ export async function handleText(ctx: Context) {
         ).data
         await ctx.reply(`https://web.archive.org${response.wayback_id}`, {
           reply_to_message_id: ctx.message.message_id,
+          disable_web_page_preview: true,
         })
       } catch (err) {
         console.log(err.message)
