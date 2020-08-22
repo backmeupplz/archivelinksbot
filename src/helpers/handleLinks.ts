@@ -15,16 +15,22 @@ export async function handleLinks(ctx: Context) {
           entity.length
         )
       try {
-        await ctx.reply(await tryArchivingUrlWebArchive(url), {
-          reply_to_message_id: ctx.message.message_id,
-          disable_web_page_preview: true,
-        })
-      } catch (err) {
-        try {
-          await ctx.reply(await tryArchivingUrlArchiveIs(url), {
+        const archiveUrl = await tryArchivingUrlWebArchive(url)
+        if (archiveUrl) {
+          await ctx.reply(archiveUrl, {
             reply_to_message_id: ctx.message.message_id,
             disable_web_page_preview: true,
           })
+        }
+      } catch (err) {
+        const nextArchiveUrl = await tryArchivingUrlArchiveIs(url)
+        try {
+          if (nextArchiveUrl) {
+            await ctx.reply(nextArchiveUrl, {
+              reply_to_message_id: ctx.message.message_id,
+              disable_web_page_preview: true,
+            })
+          }
         } catch (err) {
           console.log(url, err.message)
         }
