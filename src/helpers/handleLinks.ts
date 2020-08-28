@@ -65,9 +65,9 @@ async function tryArchivingUrlArchiveIs(url: string) {
 }
 
 async function checkIfUrlWasSavedEarlier(url: string) {
-  const todayDate = moment().format( 'YYYYMMDDhhmmss');
+  const todayDate = moment();
   const response = (
-      await axios.get('http://archive.org/wayback/available?url=' + url + '&timestamp=' + todayDate)
+      await axios.get('http://archive.org/wayback/available?url=' + url + '&timestamp=' + todayDate.clone().format( 'YYYYMMDDhhmmss'))
   ).data
 
   if (Object.keys(response.archived_snapshots).length > 0) {
@@ -75,7 +75,7 @@ async function checkIfUrlWasSavedEarlier(url: string) {
     if (closestSnapshot.available)
     {
       const dateCreated = moment(closestSnapshot.timestamp, 'YYYYMMDDhhmmss').startOf('day'); // Parse archive datetime
-      const weekOldDate = moment().subtract(7, 'days').startOf('day'); // Get date 7 days ago
+      const weekOldDate = todayDate.clone().subtract(7, 'days').startOf('day'); // Get date 7 days ago
 
       if (dateCreated.isAfter(weekOldDate)) {
         return true
