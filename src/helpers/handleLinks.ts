@@ -47,7 +47,6 @@ export async function handleLinks(ctx: Context) {
 }
 
 async function tryArchivingUrlWebArchive(url: string) {
-  console.log("started archiving")
   const response = (
     await axios.post('https://pragma.archivelab.org', {
       url,
