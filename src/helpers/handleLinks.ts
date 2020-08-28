@@ -1,5 +1,6 @@
 import { Context } from 'telegraf'
 import axios from 'axios'
+const moment = require('moment');
 const archive = require('archive.is')
 
 export async function handleLinks(ctx: Context) {
@@ -14,6 +15,12 @@ export async function handleLinks(ctx: Context) {
           entity.offset,
           entity.length
         )
+      const isSavedEarlier = await checkIfUrlWasSavedEarlier(url);
+      if (isSavedEarlier) {
+        console.log("saved earlier, skip")
+        continue;
+      }
+
       try {
         const archiveUrl = await tryArchivingUrlWebArchive(url)
         if (archiveUrl) {
@@ -41,15 +48,42 @@ export async function handleLinks(ctx: Context) {
 }
 
 async function tryArchivingUrlWebArchive(url: string) {
+  console.log("started archiving")
   const response = (
     await axios.post('https://pragma.archivelab.org', {
       url,
     })
   ).data
-  return `https://web.archive.org${response.wayback_id}`
+
+  if (response) {
+    return `https://web.archive.org${response.wayback_id}`
+  }
+  return false;
 }
 
 async function tryArchivingUrlArchiveIs(url: string) {
   const response = await archive.save(url)
   return response.shortUrl
+}
+
+async function checkIfUrlWasSavedEarlier(url: string) {
+  const todayDate = moment().format( 'YYYYMMDDhhmmss');
+  const response = (
+      await axios.get('http://archive.org/wayback/available?url=' + url + '&timestamp=' + todayDate)
+  ).data
+
+  if (Object.keys(response.archived_snapshots).length > 0) {
+    const closestSnapshot = response.archived_snapshots.closest
+    if (closestSnapshot.available)
+    {
+      const dateCreated = moment(closestSnapshot.timestamp, 'YYYYMMDDhhmmss').startOf('day'); // Parse archive datetime
+      const weekOldDate = moment().subtract(7, 'days').startOf('day'); // Get date 7 days ago
+
+      if (dateCreated.isAfter(weekOldDate)) {
+        return true
+      }
+    }
+  }
+
+  return false;
 }
