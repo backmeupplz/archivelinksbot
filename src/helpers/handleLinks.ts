@@ -17,7 +17,6 @@ export async function handleLinks(ctx: Context) {
         )
       const isSavedEarlier = await checkIfUrlWasSavedEarlier(url);
       if (isSavedEarlier) {
-        console.log("saved earlier, skip")
         continue;
       }
 
