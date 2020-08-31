@@ -9,7 +9,7 @@ export async function handleLinks(ctx: Context) {
   for (const entity of entities) {
     if (entity.url || entity.type === 'url') {
       await ctx.replyWithChatAction('typing')
-      var url =
+      let url =
         entity.url ||
         (ctx.message.text || ctx.message.caption).substr(
           entity.offset,
