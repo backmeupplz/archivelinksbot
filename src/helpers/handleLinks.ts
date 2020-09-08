@@ -1,6 +1,6 @@
 import { Context } from 'telegraf'
 import axios from 'axios'
-const moment = require('moment');
+const moment = require('moment')
 const archive = require('archive.is')
 
 export async function handleLinks(ctx: Context) {
@@ -17,19 +17,21 @@ export async function handleLinks(ctx: Context) {
         )
 
       // Pubmed articles retrieving hack
-      if (url.includes('ncbi.nlm.nih.gov') && !url.includes('pubmed.ncbi.nlm.nih.gov'))
-      {
-        const articleId = await parsePubMed(url);
+      if (
+        url.includes('ncbi.nlm.nih.gov') &&
+        !url.includes('pubmed.ncbi.nlm.nih.gov')
+      ) {
+        const articleId = await parsePubMed(url)
         if (articleId) {
-          url = 'https://pubmed.ncbi.nlm.nih.gov/' + articleId;
+          url = 'https://pubmed.ncbi.nlm.nih.gov/' + articleId
         } else {
-          continue;
+          continue
         }
       }
 
-      const isSavedEarlier = await checkIfUrlWasSavedEarlier(url);
+      const isSavedEarlier = await checkIfUrlWasSavedEarlier(url)
       if (isSavedEarlier) {
-        continue;
+        continue
       }
 
       try {
@@ -65,10 +67,10 @@ async function tryArchivingUrlWebArchive(url: string) {
     })
   ).data
 
-  if (response) {
+  if (response && response.wayback_id) {
     return `https://web.archive.org${response.wayback_id}`
   }
-  return false;
+  return false
 }
 
 async function tryArchivingUrlArchiveIs(url: string) {
@@ -77,17 +79,24 @@ async function tryArchivingUrlArchiveIs(url: string) {
 }
 
 async function checkIfUrlWasSavedEarlier(url: string) {
-  const todayDate = moment();
+  const todayDate = moment()
   const response = (
-      await axios.get('http://archive.org/wayback/available?url=' + url + '&timestamp=' + todayDate.clone().format( 'YYYYMMDDhhmmss'))
+    await axios.get(
+      'http://archive.org/wayback/available?url=' +
+        url +
+        '&timestamp=' +
+        todayDate.clone().format('YYYYMMDDhhmmss')
+    )
   ).data
 
   if (Object.keys(response.archived_snapshots).length > 0) {
     const closestSnapshot = response.archived_snapshots.closest
-    if (closestSnapshot.available)
-    {
-      const dateCreated = moment(closestSnapshot.timestamp, 'YYYYMMDDhhmmss').startOf('day'); // Parse archive datetime
-      const weekOldDate = todayDate.clone().subtract(7, 'days').startOf('day'); // Get date 7 days ago
+    if (closestSnapshot.available) {
+      const dateCreated = moment(
+        closestSnapshot.timestamp,
+        'YYYYMMDDhhmmss'
+      ).startOf('day') // Parse archive datetime
+      const weekOldDate = todayDate.clone().subtract(7, 'days').startOf('day') // Get date 7 days ago
 
       if (dateCreated.isAfter(weekOldDate)) {
         return true
@@ -95,17 +104,21 @@ async function checkIfUrlWasSavedEarlier(url: string) {
     }
   }
 
-  return false;
+  return false
 }
 
 async function parsePubMed(url: string) {
-  const articleId = url.match('(PMC\\w+)')[0];
+  const articleId = url.match('(PMC\\w+)')[0]
   const response = (
-      await axios.get('https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=' + articleId + '&format=json')
+    await axios.get(
+      'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=' +
+        articleId +
+        '&format=json'
+    )
   ).data
 
   if (response) {
-    return response.records[0].pmid;
+    return response.records[0].pmid
   }
-  return false;
+  return false
 }
