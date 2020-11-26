@@ -1,6 +1,5 @@
 import { Context } from 'telegraf'
 import axios from 'axios'
-const moment = require('moment')
 const archive = require('archive.is')
 
 export async function handleLinks(ctx: Context) {
@@ -29,27 +28,27 @@ export async function handleLinks(ctx: Context) {
         }
       }
 
-      const isSavedEarlier = await checkIfUrlWasSavedEarlier(url)
-      if (isSavedEarlier) {
-        continue
-      }
-
       try {
         const archiveUrl = await tryArchivingUrlWebArchive(url)
         if (archiveUrl) {
-          await ctx.reply(archiveUrl, {
+          await ctx.reply(`<a href="${archiveUrl}">${archiveUrl}</a>`, {
             reply_to_message_id: ctx.message.message_id,
             disable_web_page_preview: true,
+            parse_mode: 'HTML',
           })
         }
       } catch (err) {
         const nextArchiveUrl = await tryArchivingUrlArchiveIs(url)
         try {
           if (nextArchiveUrl) {
-            await ctx.reply(nextArchiveUrl, {
-              reply_to_message_id: ctx.message.message_id,
-              disable_web_page_preview: true,
-            })
+            await ctx.reply(
+              `<a href="${nextArchiveUrl}">${nextArchiveUrl}</a>`,
+              {
+                reply_to_message_id: ctx.message.message_id,
+                disable_web_page_preview: true,
+                parse_mode: 'HTML',
+              }
+            )
           }
         } catch (err) {
           console.log(url, err.message)
@@ -68,7 +67,7 @@ async function tryArchivingUrlWebArchive(url: string) {
   ).data
 
   if (response && response.wayback_id) {
-    return `https://web.archive.org${response.wayback_id}`
+    return `https://web.archive.org/${response.wayback_id}`
   }
   return false
 }
@@ -76,35 +75,6 @@ async function tryArchivingUrlWebArchive(url: string) {
 async function tryArchivingUrlArchiveIs(url: string) {
   const response = await archive.save(url)
   return response.shortUrl
-}
-
-async function checkIfUrlWasSavedEarlier(url: string) {
-  const todayDate = moment()
-  const response = (
-    await axios.get(
-      'http://archive.org/wayback/available?url=' +
-        url +
-        '&timestamp=' +
-        todayDate.clone().format('YYYYMMDDhhmmss')
-    )
-  ).data
-
-  if (Object.keys(response.archived_snapshots).length > 0) {
-    const closestSnapshot = response.archived_snapshots.closest
-    if (closestSnapshot.available) {
-      const dateCreated = moment(
-        closestSnapshot.timestamp,
-        'YYYYMMDDhhmmss'
-      ).startOf('day') // Parse archive datetime
-      const weekOldDate = todayDate.clone().subtract(7, 'days').startOf('day') // Get date 7 days ago
-
-      if (dateCreated.isAfter(weekOldDate)) {
-        return true
-      }
-    }
-  }
-
-  return false
 }
 
 async function parsePubMed(url: string) {
