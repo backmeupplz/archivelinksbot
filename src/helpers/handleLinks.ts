@@ -1,6 +1,5 @@
 import { Context } from 'telegraf'
 import axios from 'axios'
-const archive = require('archive.is')
 
 export async function handleLinks(ctx: Context) {
   const entities =
@@ -15,80 +14,63 @@ export async function handleLinks(ctx: Context) {
           entity.length
         )
 
-      // Pubmed articles retrieving hack
-      if (
-        url.includes('ncbi.nlm.nih.gov') &&
-        !url.includes('pubmed.ncbi.nlm.nih.gov')
-      ) {
-        const articleId = await parsePubMed(url)
-        if (articleId) {
-          url = 'https://pubmed.ncbi.nlm.nih.gov/' + articleId
-        } else {
-          continue
-        }
-      }
+      console.log('Saving:', url)
 
       try {
         const archiveUrl = await tryArchivingUrlWebArchive(url)
-        if (archiveUrl) {
+        if (!archiveUrl) {
+          throw new Error('Could not get web archive to work')
+        }
+        await ctx.reply(`<a href="${archiveUrl}">${archiveUrl}</a>`, {
+          reply_to_message_id: ctx.message.message_id,
+          disable_web_page_preview: true,
+          parse_mode: 'HTML',
+        })
+      } catch (err) {
+        // Just a 504, page is still saved, saving just timed out
+        if (err.message.includes('504')) {
+          const archiveUrl = `https://web.archive.org/${url}`
+          console.log('Got 504 but still returned the link', archiveUrl)
           await ctx.reply(`<a href="${archiveUrl}">${archiveUrl}</a>`, {
             reply_to_message_id: ctx.message.message_id,
             disable_web_page_preview: true,
             parse_mode: 'HTML',
           })
+          return
         }
-      } catch (err) {
-        const nextArchiveUrl = await tryArchivingUrlArchiveIs(url)
-        try {
-          if (nextArchiveUrl) {
-            await ctx.reply(
-              `<a href="${nextArchiveUrl}">${nextArchiveUrl}</a>`,
-              {
-                reply_to_message_id: ctx.message.message_id,
-                disable_web_page_preview: true,
-                parse_mode: 'HTML',
-              }
-            )
-          }
-        } catch (err) {
-          console.log(url, err.message)
-        }
-        console.log(url, err.message)
+        console.log(`Error using web archive:`, url, err.message)
       }
     }
   }
 }
 
 async function tryArchivingUrlWebArchive(url: string) {
+  // Checking if it's available already
+  const avaliabilityResponse = (
+    await axios.get(`https://archive.org/wayback/available?url=${url}`)
+  ).data
+  if (avaliabilityResponse?.archived_snapshots?.closest?.url) {
+    console.log(
+      `Got available snapshot from web archive:`,
+      avaliabilityResponse.archived_snapshots.closest.url
+    )
+    return avaliabilityResponse.archived_snapshots.closest.url
+  } else {
+    console.log('No snapshot for url, trying to save', url)
+  }
+  // Archive if not available yet
   const response = (
     await axios.post('https://pragma.archivelab.org', {
       url,
     })
   ).data
-
+  console.log(response)
   if (response && response.wayback_id) {
+    console.log(
+      'Created new snapshot on web archive:',
+      `https://web.archive.org/${response.wayback_id}`
+    )
     return `https://web.archive.org/${response.wayback_id}`
   }
-  return false
-}
-
-async function tryArchivingUrlArchiveIs(url: string) {
-  const response = await archive.save(url)
-  return response.shortUrl
-}
-
-async function parsePubMed(url: string) {
-  const articleId = url.match('(PMC\\w+)')[0]
-  const response = (
-    await axios.get(
-      'https://www.ncbi.nlm.nih.gov/pmc/utils/idconv/v1.0/?ids=' +
-        articleId +
-        '&format=json'
-    )
-  ).data
-
-  if (response) {
-    return response.records[0].pmid
-  }
-  return false
+  return undefined
 }
