@@ -64,7 +64,6 @@ async function tryArchivingUrlWebArchive(url: string) {
       url,
     })
   ).data
-  console.log(response)
   if (response && response.wayback_id) {
     console.log(
       'Created new snapshot on web archive:',
