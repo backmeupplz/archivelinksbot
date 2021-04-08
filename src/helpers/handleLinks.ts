@@ -22,7 +22,7 @@ export async function handleLinks(ctx: Context) {
         if (!archiveUrl) {
           throw new Error('Could not get web archive to work')
         }
-        links.push(`<a href="${archiveUrl}">Archieved</a>`)
+        links.push(`<a href="${archiveUrl}">Archived</a>`)
         
       } catch (err) {
         // Just a 504, page is still saved, saving just timed out
