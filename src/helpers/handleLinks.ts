@@ -38,7 +38,7 @@ export async function handleLinks(ctx: Context) {
     }
   }
   if (links.length > 0){
-    await ctx.reply(links.join(' '), {
+    await ctx.reply(links.join(', '), {
           reply_to_message_id: ctx.message.message_id,
           disable_web_page_preview: true,
           parse_mode: 'HTML',
