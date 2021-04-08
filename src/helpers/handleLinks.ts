@@ -30,7 +30,7 @@ export async function handleLinks(ctx: Context) {
           const archiveUrl = `https://web.archive.org/${url}`
           console.log('Got 504 but still returned the link', archiveUrl)
 
-          links.push(`<a href="${archiveUrl}">Archieved</a>`)
+          links.push(`<a href="${archiveUrl}">Archived</a>`)
           return
         }
         console.log(`Error using web archive:`, url, err.message)
