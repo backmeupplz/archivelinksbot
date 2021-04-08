@@ -4,6 +4,7 @@ import axios from 'axios'
 export async function handleLinks(ctx: Context) {
   const entities =
     ctx.update.message?.entities || ctx.update.message?.caption_entities || []
+  let links = []
   for (const entity of entities) {
     if (entity.url || entity.type === 'url') {
       await ctx.replyWithChatAction('typing')
@@ -21,26 +22,27 @@ export async function handleLinks(ctx: Context) {
         if (!archiveUrl) {
           throw new Error('Could not get web archive to work')
         }
-        await ctx.reply(`<a href="${archiveUrl}">${archiveUrl}</a>`, {
-          reply_to_message_id: ctx.message.message_id,
-          disable_web_page_preview: true,
-          parse_mode: 'HTML',
-        })
+        links.push(`<a href="${archiveUrl}">Archieved</a>`)
+        
       } catch (err) {
         // Just a 504, page is still saved, saving just timed out
         if (err.message.includes('504')) {
           const archiveUrl = `https://web.archive.org/${url}`
           console.log('Got 504 but still returned the link', archiveUrl)
-          await ctx.reply(`<a href="${archiveUrl}">${archiveUrl}</a>`, {
-            reply_to_message_id: ctx.message.message_id,
-            disable_web_page_preview: true,
-            parse_mode: 'HTML',
-          })
+
+          links.push(`<a href="${archiveUrl}">Archieved</a>`)
           return
         }
         console.log(`Error using web archive:`, url, err.message)
       }
     }
+  }
+  if (links.length > 0){
+    await ctx.reply(links.join(' '), {
+          reply_to_message_id: ctx.message.message_id,
+          disable_web_page_preview: true,
+          parse_mode: 'HTML',
+        })
   }
 }
 
