@@ -23,26 +23,25 @@ export async function handleLinks(ctx: Context) {
           throw new Error('Could not get web archive to work')
         }
         links.push(`<a href="${archiveUrl}">Archived</a>`)
-        
       } catch (err) {
-        // Just a 504, page is still saved, saving just timed out
-        if (err.message.includes('504')) {
+        // Just a 504 or 502, page is still saved, saving just timed out
+        if (err.message.includes('504') || err.message.includes('502')) {
           const archiveUrl = `https://web.archive.org/${url}`
-          console.log('Got 504 but still returned the link', archiveUrl)
+          console.log('Got 504 or 502 but still returned the link', archiveUrl)
 
           links.push(`<a href="${archiveUrl}">Archived</a>`)
-          return
+        } else {
+          console.log(`Error using web archive:`, url, err.message)
         }
-        console.log(`Error using web archive:`, url, err.message)
       }
     }
   }
-  if (links.length > 0){
+  if (links.length > 0) {
     await ctx.reply(links.join(', '), {
-          reply_to_message_id: ctx.message.message_id,
-          disable_web_page_preview: true,
-          parse_mode: 'HTML',
-        })
+      reply_to_message_id: ctx.message.message_id,
+      disable_web_page_preview: true,
+      parse_mode: 'HTML',
+    })
   }
 }
 
