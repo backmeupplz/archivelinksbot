@@ -6,8 +6,8 @@ This bot saves all links that it gets to the web archive.
 
 1. Clone this repo: `git clone https://github.com/backmeupplz/archivelinksbot`
 2. Create `.env` with the environment variables listed below
-3. Run `yarn install` in the root folder
-4. Run `yarn develop`
+3. Run `yarn`
+4. Run `yarn start`
 
 And you should be good to go! Feel free to fork and submit pull requests. Thanks!
 

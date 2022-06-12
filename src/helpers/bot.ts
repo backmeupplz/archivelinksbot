@@ -1,5 +1,4 @@
-import Telegraf from 'telegraf'
+import { Bot } from 'grammy'
+import env from '@/helpers/env'
 
-export const bot = new Telegraf(process.env.TOKEN)
-
-bot.catch(console.error)
+export default new Bot(env.TOKEN)

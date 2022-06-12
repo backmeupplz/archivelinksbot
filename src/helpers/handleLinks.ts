@@ -1,20 +1,22 @@
-import { Context } from 'telegraf'
+import { Context } from 'grammy'
 import axios from 'axios'
 
-export async function handleLinks(ctx: Context) {
-  const entities =
-    ctx.update.message?.entities || ctx.update.message?.caption_entities || ctx.update.channel_post.entities || ctx.update.channel_post.caption_entities || []
-  let links = []
+export default async function (ctx: Context) {
+  const entities = ctx.msg?.entities || ctx.msg?.caption_entities || []
+  const links = []
   for (const entity of entities) {
-    if (entity.url || entity.type === 'url') {
+    if (entity.type === 'url' || (entity.type === 'text_link' && entity.url)) {
       await ctx.replyWithChatAction('typing')
-      let url =
-        entity.url ||
-        (ctx.message.text || ctx.message.caption).substr(
-          entity.offset,
-          entity.length
-        )
-
+      const url =
+        entity.type === 'text_link'
+          ? entity.url
+          : (ctx.msg?.text || ctx.msg?.caption)?.substring(
+              entity.offset,
+              entity.offset + entity.length
+            )
+      if (!url) {
+        continue
+      }
       console.log('Saving:', url)
 
       try {
@@ -25,20 +27,27 @@ export async function handleLinks(ctx: Context) {
         links.push(`<a href="${archiveUrl}">Archived</a>`)
       } catch (err) {
         // Just a 504 or 502, page is still saved, saving just timed out
-        if (err.message.includes('504') || err.message.includes('502')) {
+        if (
+          err instanceof Error &&
+          (err.message.includes('504') || err.message.includes('502'))
+        ) {
           const archiveUrl = `https://web.archive.org/${url}`
           console.log('Got 504 or 502 but still returned the link', archiveUrl)
 
           links.push(`<a href="${archiveUrl}">Archived</a>`)
         } else {
-          console.log(`Error using web archive:`, url, err.message)
+          console.log(
+            `Error using web archive:`,
+            url,
+            err instanceof Error ? err.message : err
+          )
         }
       }
     }
   }
   if (links.length > 0) {
     await ctx.reply(links.join(', '), {
-      reply_to_message_id: ctx.message.message_id,
+      reply_to_message_id: ctx.msg?.message_id,
       disable_web_page_preview: true,
       parse_mode: 'HTML',
     })

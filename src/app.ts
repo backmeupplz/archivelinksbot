@@ -1,19 +1,28 @@
-import * as dotenv from 'dotenv'
-dotenv.config({ path: `${__dirname}/../.env` })
+import 'module-alias/register'
+import 'source-map-support/register'
 
-import { bot } from './helpers/bot'
-import { checkTime } from './middlewares/checkTime'
-import { sendHelp } from './commands/help'
-import { handleLinks } from './helpers/handleLinks'
+import { ignoreOld, sequentialize } from 'grammy-middlewares'
+import { run } from '@grammyjs/runner'
+import bot from '@/helpers/bot'
+import handleLinks from '@/helpers/handleLinks'
+import sendHelp from '@/helpers/sendHelp'
 
-// Check time
-bot.use(checkTime)
-// Setup commands
-bot.command(['help', 'start'], sendHelp)
-// Setup handler
-bot.use(handleLinks)
-// Start bot
-bot.launch()
+async function runApp() {
+  console.log('Starting app...')
+  bot
+    // Middlewares
+    .use(sequentialize())
+    .use(ignoreOld())
+  // Commands
+  bot.command(['help', 'start'], sendHelp)
+  // Handlers
+  bot.on(['msg::text_link', 'msg::url'], handleLinks)
+  // Errors
+  bot.catch(console.error)
+  // Start bot
+  await bot.init()
+  run(bot)
+  console.info(`@${bot.botInfo.username} is up and running`)
+}
 
-// Log success
-console.info('Bot is up and running')
+void runApp()
