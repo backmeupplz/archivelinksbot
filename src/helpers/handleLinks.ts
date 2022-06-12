@@ -3,7 +3,7 @@ import axios from 'axios'
 
 export async function handleLinks(ctx: Context) {
   const entities =
-    ctx.update.message?.entities || ctx.update.message?.caption_entities || []
+    ctx.update.message?.entities || ctx.update.message?.caption_entities || ctx.update.channel_post.entities || ctx.update.channel_post.caption_entities || []
   let links = []
   for (const entity of entities) {
     if (entity.url || entity.type === 'url') {
